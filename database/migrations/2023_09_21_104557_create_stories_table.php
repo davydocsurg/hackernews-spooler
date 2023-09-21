@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('stories', function (Blueprint $table) {
             $table->id();
-            $table->integer('story_id');
-            $table->string('by');
+            $table->integer('story_id')->unique();
+            $table->foreignId('author_id')->constrained('authors')->onUpdate('cascade')->onDelete('cascade');
             $table->integer('descendants');
             $table->integer('score');
-            $table->integer('time');
+            $table->dateTime('time', $precision = 0);
             $table->string('title');
             $table->string('type');
             $table->string('url');
