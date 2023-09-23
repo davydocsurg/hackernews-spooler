@@ -32,7 +32,7 @@ class HackernewsService
      * @param int $storyId
      * @return array<string, mixed>
      */
-    public function fetchStory(int $storyId)
+    public function fetchStoryData(int $storyId)
     {
         $storyEndpoint = config()->get('hackernews.story_endpoint');
         $printParams = 'print=pretty';
