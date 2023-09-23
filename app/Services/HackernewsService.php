@@ -16,7 +16,7 @@ class HackernewsService
     {
         $storiesEndpoint = config()->get('hackernews.stories_endpoint');
         $printParams = 'print=pretty';
-        $params = 'orderBy=%22$priority%22&limitToFirst=100';
+        $params = '&orderBy=%22$priority%22&limitToFirst=100';
         $response = Http::get($storiesEndpoint . '.json?' . $printParams . $params);
 
         if ($response->successful()) {
@@ -37,6 +37,25 @@ class HackernewsService
         $storyEndpoint = config()->get('hackernews.story_endpoint');
         $printParams = 'print=pretty';
         $response = Http::get($storyEndpoint . $storyId . '.json?' . $printParams);
+
+        if ($response->successful()) {
+            return $response->json();
+        }
+
+        return [];
+    }
+
+    /**
+     * Fetch a comment from the Hackernews API.
+     *
+     * @param int $commentId
+     * @return array<string, mixed>
+     */
+    public function fetchCommentData(int $commentId)
+    {
+        $commentEndpoint = config()->get('hackernews.comment_endpoint');
+        $printParams = 'print=pretty';
+        $response = Http::get($commentEndpoint . $commentId . '.json?' . $printParams);
 
         if ($response->successful()) {
             return $response->json();

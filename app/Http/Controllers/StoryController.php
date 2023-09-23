@@ -18,9 +18,9 @@ class StoryController extends Controller
     public function fetchAndStoreStories(HackernewsService $hackernewsService)
     {
         try {
-            $job = new FetchStoriesJob($hackernewsService);
-            $this->dispatch($job);
-
+            // $job = new FetchStoriesJob($hackernewsService);
+            // $job->dispatch();
+            FetchStoriesJob::dispatch($hackernewsService);
             return response()->json([
                 'message' => 'Fetching stories job dispatched.',
             ]);
