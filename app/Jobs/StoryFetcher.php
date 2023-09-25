@@ -2,9 +2,6 @@
 
 namespace App\Jobs;
 
-use App\Models\Author;
-use App\Models\Comment;
-use App\Models\Reply;
 use App\Models\Story;
 use App\Services\AuthorService;
 use App\Services\HackernewsService;
@@ -14,7 +11,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class StoryFetcher implements ShouldQueue
@@ -74,6 +70,8 @@ class StoryFetcher implements ShouldQueue
      * Store the fetched story data in the 'stories' table.
      *
      * @param array $storyData
+     * @return Story
+     * @throws \Throwable
      */
     protected function storeStory(array $storyData): Story
     {

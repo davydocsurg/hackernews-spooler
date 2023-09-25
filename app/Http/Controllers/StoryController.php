@@ -6,19 +6,26 @@ use App\Jobs\FetchStoriesJob;
 use App\Services\HackernewsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class StoryController extends Controller
 {
     /**
      * Dispatch the job to fetch stories.
      *
+     * @param HackernewsService $hackernewsService
      * @param Request $request
-     * @return Response
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function fetchAndStoreStories(HackernewsService $hackernewsService)
+    public function fetchAndStoreStories(HackernewsService $hackernewsService, Request $request)
     {
         try {
-            FetchStoriesJob::dispatch($hackernewsService);
+            $validated = $this->validateRequest($request);
+            if ($validated->fails()) {
+                return failedResponse($validated->errors(), false); // Return a 400 Bad Request status code
+            }
+
+            FetchStoriesJob::dispatch($hackernewsService, $request->limit);
 
             return successResponse('Fetching stories job dispatched successfully.', true); // Return a 200 OK status code
         } catch (\Throwable $e) {
@@ -27,5 +34,18 @@ class StoryController extends Controller
 
             return failedResponse($e, false); // Return a 500 Internal Server Error status code
         }
+    }
+
+    /**
+     * Validate incoming request
+     *
+     * @param Request $request
+     * @return Object $validated
+     */
+    public function validateRequest(Request $request): object
+    {
+        return Validator::make($request->all(), [
+            'limit' => 'required|integer|min:1|max:100'
+        ]);
     }
 }
