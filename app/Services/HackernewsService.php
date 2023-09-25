@@ -16,7 +16,7 @@ class HackernewsService
     {
         $storiesEndpoint = config()->get('hackernews.stories_endpoint');
         $printParams = 'print=pretty';
-        $params = '&orderBy=%22$priority%22&limitToFirst=100';
+        $params = '&orderBy=%22$priority%22&limitToFirst=10';
         $response = Http::get($storiesEndpoint . '.json?' . $printParams . $params);
 
         if ($response->successful()) {

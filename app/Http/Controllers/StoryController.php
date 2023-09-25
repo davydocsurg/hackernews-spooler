@@ -22,7 +22,7 @@ class StoryController extends Controller
             // $job->dispatch();
             FetchStoriesJob::dispatch($hackernewsService);
             return response()->json([
-                'message' => 'Fetching stories job dispatched.',
+                'message' => 'Fetching stories job dispatched successfully.',
             ]);
         } catch (\Throwable $e) {
             // Handle any exceptions or errors here

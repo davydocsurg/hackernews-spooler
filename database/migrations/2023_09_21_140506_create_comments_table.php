@@ -19,7 +19,6 @@ return new class extends Migration
             $table->string('type');
             $table->foreignId('story_id')->constrained('stories')->onUpdate('cascade')->onDelete('cascade');
             $table->foreignId('author_id')->constrained('authors')->onUpdate('cascade')->onDelete('cascade');
-            $table->foreignId('parent_comment_id')->constrained('comments')->onUpdate('cascade')->onDelete('cascade')->nullable();
             $table->timestamps();
         });
     }

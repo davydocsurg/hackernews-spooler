@@ -45,7 +45,10 @@ class FetchStoriesJob implements ShouldQueue
                 // Validate the fetched story data before storing it in the database
                 if ($this->isValidStoryData($storyData)) {
                     // Store the fetched story data in the 'stories' table
-                    $this->storeStoryData($storyData);
+                    $story = $this->storeStoryData($storyData);
+
+                    // Fetch and store comments for this story
+                    $this->fetchAndStoreComments($story, $storyData['kids']);
                 }
             }
         }
@@ -87,11 +90,24 @@ class FetchStoriesJob implements ShouldQueue
     }
 
     /**
+     * Validate the fetched comment data.
+     * Add your validation rules here.
+     *
+     * @param array $commentData
+     * @return bool
+     */
+    protected function isValidCommentData(array $commentData): bool
+    {
+        // Check if 'text' are present
+        return isset($commentData['text']);
+    }
+
+    /**
      * Store the fetched story data in the 'stories' table.
      *
      * @param array $storyData
      */
-    protected function storeStoryData(array $storyData): void
+    protected function storeStoryData(array $storyData): Story
     {
         // Check if the author already exists in the 'authors' table
         $author = Author::firstOrNew(['username' => $storyData['by']]);
@@ -102,7 +118,7 @@ class FetchStoriesJob implements ShouldQueue
         }
 
         // Create the story record and associate it with the author
-        Story::create([
+        $story =    Story::create([
             'story_id' => $storyData['id'],
             'title' => $storyData['title'],
             'url' => $storyData['url'],
@@ -113,6 +129,8 @@ class FetchStoriesJob implements ShouldQueue
             'author_id' => $author->id, // Associate the story with the author
             'descendants' => $storyData['descendants'],
         ]);
+
+        return $story;
     }
 
     /**
@@ -121,26 +139,54 @@ class FetchStoriesJob implements ShouldQueue
      * @param Story $story
      * @param array $commentIds
      */
-    // protected function fetchAndStoreComments(Story $story, array $commentIds): void
-    // {
-    //     foreach ($commentIds as $commentId) {
-    //         // Check if the comment already exists in the database to prevent duplicates
-    //         if (!$this->commentExists($commentId)) {
-    //             // Fetch individual comment details
-    //             $commentData = $this->hackernewsService->fetchCommentData($commentId);
+    protected function fetchAndStoreComments(Story $story, array $commentIds): void
+    {
+        foreach ($commentIds as $commentId) {
+            // Check if the comment already exists in the database to prevent duplicates
+            if (!$this->commentExists($commentId)) {
+                // Fetch individual comment details
+                $commentData = $this->hackernewsService->fetchCommentData($commentId);
 
-    //             // Validate the fetched comment data (e.g., required fields)
-    //             if ($this->isValidCommentData($commentData)) {
-    //                 // Store the fetched comment data in the 'comments' table
-    //                 $comment = $this->storeCommentData($commentData);
+                // Validate the fetched comment data (e.g., required fields)
+                if ($this->isValidCommentData($commentData)) {
+                    // Store the fetched comment data in the 'comments' table
+                    $comment = $this->storeCommentData($commentData, $story);
 
-    //                 // Associate the comment with the story
-    //                 $story->comments()->save($comment);
+                    // Associate the comment with the story
+                    $story->comments()->save($comment);
+                }
+            }
+        }
+    }
 
-    //                 // Fetch and store the author for this comment
-    //                 $this->fetchAndStoreAuthor($commentData['by']);
-    //             }
-    //         }
-    //     }
-    // }
+    /**
+     * Store the fetched comment data in the 'comments' table.
+     *
+     * @param array $commentData
+     * @param Story $story The parent story if it's a top-level comment, or the parent comment if it's a reply
+     * @return Comment
+     */
+    protected function storeCommentData(array $commentData, Story $story): Comment
+    {
+        // Check if the author already exists in the 'authors' table
+        $author = Author::firstOrNew(['username' => $commentData['by']]);
+
+        if (!$author->exists) {
+            // If the author is new, save the author record
+            $author->save();
+        }
+
+        // Create the comment record and associate it with the author, story, and parent comment (if provided)
+        $comment = Comment::create([
+            'comment_id' => $commentData['id'],
+            'text' => $commentData['text'],
+            'type' => $commentData['type'],
+            // Convert the UNIX timestamp to a DateTime instance
+            'time' => \DateTime::createFromFormat('U', $commentData['time']),
+            'author_id' => $author->id, // Associate the comment with the author
+            'story_id' => $story->id, // Associate the comment with the story
+        ]);
+
+        return $comment;
+    }
 }
