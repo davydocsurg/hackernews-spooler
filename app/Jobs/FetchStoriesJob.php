@@ -40,14 +40,14 @@ class FetchStoriesJob implements ShouldQueue
 
         foreach ($storyIds as $storyId) {
             // Check if the story already exists in the database to prevent duplicates
-            if (!$this->storyExists($storyId)) {
+            if (!$this->storyExistsInDatabase($storyId)) {
                 // Fetch individual story details
                 $storyData = $this->hackernewsService->fetchStoryData($storyId);
 
                 // Validate the fetched story data before storing it in the database
                 if ($this->isValidStoryData($storyData)) {
                     // Store the fetched story data in the 'stories' table
-                    $story = $this->storeStoryData($storyData);
+                    $story = $this->storeStory($storyData);
 
                     // Fetch and store comments for this story
                     $this->fetchAndStoreComments($story, $storyData['kids']);
@@ -62,7 +62,7 @@ class FetchStoriesJob implements ShouldQueue
      * @param int $storyId
      * @return bool
      */
-    protected function storyExists(int $storyId): bool
+    protected function storyExistsInDatabase(int $storyId): bool
     {
         return Story::where('story_id', $storyId)->exists();
     }
@@ -73,7 +73,7 @@ class FetchStoriesJob implements ShouldQueue
      * @param int $commentId
      * @return bool
      */
-    protected function commentExists(int $commentId): bool
+    protected function commentExistsInDatabase(int $commentId): bool
     {
         return Comment::where('comment_id', $commentId)->exists();
     }
@@ -84,7 +84,7 @@ class FetchStoriesJob implements ShouldQueue
      * @param int $replyId
      * @return bool
      */
-    protected function replyExists(int $replyId): bool
+    protected function replyExistsInDatabase(int $replyId): bool
     {
         return Reply::where('reply_id', $replyId)->exists();
     }
@@ -137,7 +137,7 @@ class FetchStoriesJob implements ShouldQueue
      *
      * @param array $storyData
      */
-    protected function storeStoryData(array $storyData): Story
+    protected function storeStory(array $storyData): Story
     {
         try {
             // Check if the author already exists in the 'authors' table
@@ -174,23 +174,28 @@ class FetchStoriesJob implements ShouldQueue
     {
         foreach ($commentIds as $commentId) {
             // Check if the comment or reply already exists in the database to prevent duplicates
-            if (!$this->commentExists($commentId)) {
+            if (!$this->commentExistsInDatabase($commentId)) {
                 // Fetch individual comment details
                 $commentData = $this->hackernewsService->fetchCommentData($commentId);
                 // Validate the fetched comment data (e.g., required fields)
                 if ($this->isValidCommentData($commentData)) {
                     // Determine whether it's a comment or a reply based on the presence of a parent comment
                     if ($parentComment) {
-                        // Store the fetched reply data in the 'replies' table
-                        $this->storeReplyData($commentData, $parentComment);
+                        // Check if the reply already exists in the database to prevent duplicates
+                        if (!$this->replyExistsInDatabase($commentData['id'])) {
+                            // Store the fetched reply data in the 'replies' table
+                            $this->storeReply($commentData, $parentComment);
+                        }
                     }
 
                     // Store the fetched comment data in the 'comments' table
-                    $comment = $this->storeCommentData($commentData, $story);
+                    $comment = $this->storeComment($commentData, $story);
 
                     // If this comment or reply has "kids," recursively fetch and store them as comments or replies
                     if (isset($commentData['kids']) && is_array($commentData['kids'])) {
-                        $this->fetchAndStoreComments($story, $commentData['kids'], $comment);
+                        if (!$this->replyExistsInDatabase($commentData['id'])) {
+                            $this->fetchAndStoreComments($story, $commentData['kids'], $comment);
+                        }
                     }
                 }
             }
@@ -202,9 +207,9 @@ class FetchStoriesJob implements ShouldQueue
      *
      * @param array $commentData
      * @param Story $story The parent story if it's a top-level comment, or the parent comment if it's a reply
-     * @return Comment
+     * @return Comment|Exception
      */
-    protected function storeCommentData(array $commentData, Story $story): Comment
+    protected function storeComment(array $commentData, Story $story): ?Comment
     {
         try {
             // Check if the author already exists in the 'authors' table
@@ -233,9 +238,9 @@ class FetchStoriesJob implements ShouldQueue
      *
      * @param array $replyData
      * @param Comment $parentComment
-     * @return Reply
+     * @return Reply|Exception
      */
-    protected function storeReplyData(array $replyData, Comment $parentComment): Reply
+    protected function storeReply(array $replyData, Comment $parentComment): ?Reply
     {
         try {
             // Check if the author already exists in the 'authors' table
