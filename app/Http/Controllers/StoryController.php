@@ -18,19 +18,13 @@ class StoryController extends Controller
     public function fetchAndStoreStories(HackernewsService $hackernewsService)
     {
         try {
-            // $job = new FetchStoriesJob($hackernewsService);
-            // $job->dispatch();
             FetchStoriesJob::dispatch($hackernewsService);
-            return response()->json([
-                'message' => 'Fetching stories job dispatched successfully.',
-            ]);
+            return successResponse('Fetching stories job dispatched successfully.', true); // Return a 200 OK status code
         } catch (\Throwable $e) {
             // Handle any exceptions or errors here
             Log::error('Error dispatching FetchStoriesJob: ' . $e->getMessage());
 
-            return response()->json([
-                'error' => 'An error occurred while dispatching the job. Check the logs for more details.',
-            ], 500); // Return a 500 Internal Server Error status code
+            return failedResponse($e, false); // Return a 500 Internal Server Error status code
         }
     }
 }

@@ -13,6 +13,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class FetchStoriesJob implements ShouldQueue
 {
@@ -115,34 +116,51 @@ class FetchStoriesJob implements ShouldQueue
     }
 
     /**
+     * Create or retrieve an author based on the username.
+     *
+     * @param string $username
+     * @return Author
+     */
+    protected function getOrCreateAuthor(string $username): Author
+    {
+        $author = Author::firstOrNew(['username' => $username], ['username' => $username]);
+        if (!$author->exists) {
+            // If the author is new, save the author record
+            $author->save();
+        }
+
+        return $author;
+    }
+
+    /**
      * Store the fetched story data in the 'stories' table.
      *
      * @param array $storyData
      */
     protected function storeStoryData(array $storyData): Story
     {
-        // Check if the author already exists in the 'authors' table
-        $author = Author::firstOrNew(['username' => $storyData['by']]);
+        try {
+            // Check if the author already exists in the 'authors' table
+            $author = $this->getOrCreateAuthor($storyData['by']);
 
-        if (!$author->exists) {
-            // If the author is new, save the author record
-            $author->save();
+            // Create the story record and associate it with the author
+            $story =    Story::create([
+                'story_id' => $storyData['id'],
+                'title' => $storyData['title'],
+                'url' => $storyData['url'],
+                'type' => $storyData['type'],
+                'score' => $storyData['score'],
+                // Convert the UNIX timestamp to a DateTime instance
+                'time' => \DateTime::createFromFormat('U', $storyData['time']),
+                'author_id' => $author->id, // Associate the story with the author
+                'descendants' => $storyData['descendants'],
+            ]);
+
+            return $story;
+        } catch (\Throwable $th) {
+            Log::error('Error storing story data: ' . $th);
+            return failedResponse($th, false, 'Error storing story data');
         }
-
-        // Create the story record and associate it with the author
-        $story =    Story::create([
-            'story_id' => $storyData['id'],
-            'title' => $storyData['title'],
-            'url' => $storyData['url'],
-            'type' => $storyData['type'],
-            'score' => $storyData['score'],
-            // Convert the UNIX timestamp to a DateTime instance
-            'time' => \DateTime::createFromFormat('U', $storyData['time']),
-            'author_id' => $author->id, // Associate the story with the author
-            'descendants' => $storyData['descendants'],
-        ]);
-
-        return $story;
     }
 
     /**
@@ -188,26 +206,26 @@ class FetchStoriesJob implements ShouldQueue
      */
     protected function storeCommentData(array $commentData, Story $story): Comment
     {
-        // Check if the author already exists in the 'authors' table
-        $author = Author::firstOrNew(['username' => $commentData['by']]);
+        try {
+            // Check if the author already exists in the 'authors' table
+            $author = $this->getOrCreateAuthor($commentData['by']);
 
-        if (!$author->exists) {
-            // If the author is new, save the author record
-            $author->save();
+            // Create the comment record and associate it with the author, story, and parent comment (if provided)
+            $comment = Comment::create([
+                'comment_id' => $commentData['id'],
+                'text' => $commentData['text'],
+                'type' => $commentData['type'],
+                // Convert the UNIX timestamp to a DateTime instance
+                'time' => \DateTime::createFromFormat('U', $commentData['time']),
+                'author_id' => $author->id, // Associate the comment with the author
+                'story_id' => $story->id, // Associate the comment with the story
+            ]);
+
+            return $comment;
+        } catch (\Throwable $th) {
+            Log::error('Error storing comment data: ' . $th);
+            return failedResponse($th, false, 'Error storing comment data');
         }
-
-        // Create the comment record and associate it with the author, story, and parent comment (if provided)
-        $comment = Comment::create([
-            'comment_id' => $commentData['id'],
-            'text' => $commentData['text'],
-            'type' => $commentData['type'],
-            // Convert the UNIX timestamp to a DateTime instance
-            'time' => \DateTime::createFromFormat('U', $commentData['time']),
-            'author_id' => $author->id, // Associate the comment with the author
-            'story_id' => $story->id, // Associate the comment with the story
-        ]);
-
-        return $comment;
     }
 
     /**
@@ -219,23 +237,23 @@ class FetchStoriesJob implements ShouldQueue
      */
     protected function storeReplyData(array $replyData, Comment $parentComment): Reply
     {
-        // Check if the author already exists in the 'authors' table
-        $author = Author::firstOrNew(['username' => $replyData['by']]);
+        try {
+            // Check if the author already exists in the 'authors' table
+            $author = $this->getOrCreateAuthor($replyData['by']);
 
-        if (!$author->exists) {
-            // If the author is new, save the author record
-            $author->save();
+            $reply = Reply::create([
+                'reply_id' => $replyData['id'],
+                'text' => $replyData['text'],
+                'type' => $replyData['type'],
+                'time' => \DateTime::createFromFormat('U', $replyData['time']),
+                'author_id' => $author->id,
+                'parent_comment_id' => $parentComment->id, // Associate the reply with its parent comment
+            ]);
+
+            return $reply;
+        } catch (\Throwable $th) {
+            Log::error('Error storing reply data: ' . $th);
+            return failedResponse($th, false, 'Error storing reply data');
         }
-
-        $reply = Reply::create([
-            'reply_id' => $replyData['id'],
-            'text' => $replyData['text'],
-            'type' => $replyData['type'],
-            'time' => \DateTime::createFromFormat('U', $replyData['time']),
-            'author_id' => $author->id,
-            'parent_comment_id' => $parentComment->id, // Associate the reply with its parent comment
-        ]);
-
-        return $reply;
     }
 }
