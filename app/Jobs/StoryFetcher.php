@@ -24,18 +24,26 @@ class StoryFetcher implements ShouldQueue
     protected $hackernewsService;
     protected $authorService;
     protected $storyLimit;
-    protected $defaultStoryLimit = 100;
+    protected $defaultStoryLimit;
 
     /**
      * Create a new job instance.
      */
     public function __construct(HackernewsService $hackernewsService, $storyLimit)
     {
+        // Get an instance of the HackernewsService class
         $this->hackernewsService = $hackernewsService;
+
+        // Create an instance of the AuthorService class
         $authorService = new AuthorService();
         $this->authorService = $authorService;
+
+        // Set the story limit
         $this->storyLimit = $storyLimit;
-        $this->defaultStoryLimit = $storyLimit;
+
+        // Get the default story limit from the config file
+        $defaultStoryLimit = config()->get('hackernews.default_story_limit');
+        $this->defaultStoryLimit = $defaultStoryLimit;
     }
 
     /**
