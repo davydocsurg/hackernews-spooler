@@ -17,11 +17,11 @@ class Comment extends Model
     protected $fillable = [
         'comment_id',
         'text',
-        'score',
+        'type',
         'time',
         'author_id',
         'story_id',
-        'parent_comment_id'
+        'parent_comment_id',
     ];
 
     public function author()

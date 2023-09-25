@@ -18,10 +18,11 @@ class Story extends Model
         'story_id',
         'title',
         'type',
-        'text',
         'score',
         'time',
         'author_id',
+        'url',
+        'descendants',
     ];
 
     public function author()
