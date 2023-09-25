@@ -15,9 +15,15 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
+        // Default limit value
+        $defaultLimit = config()->get('hackernews.default_story_limit');
+
+        // Get the HackernewsService instance
         $hackernewsService = new HackernewsService();
 
-        $schedule->job(new FetchStoriesJob($hackernewsService))->every();
+        // Schedule the FetchStoriesJob to run every 12 hours
+        $schedule->job(new FetchStoriesJob($hackernewsService, $defaultLimit))->everySixHours();
+        $schedule->job(new FetchStoriesJob($hackernewsService, $defaultLimit))->everySixHours()->hourlyAt(12);
     }
 
     /**
