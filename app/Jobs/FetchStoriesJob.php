@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Author;
 use App\Models\Comment;
+use App\Models\Reply;
 use App\Models\Story;
 use App\Services\HackernewsService;
 use Illuminate\Bus\Queueable;
@@ -68,12 +69,23 @@ class FetchStoriesJob implements ShouldQueue
     /**
      * Check if a comment with the given ID already exists in the database.
      *
-     * @param int $storyId
+     * @param int $commentId
      * @return bool
      */
     protected function commentExists(int $commentId): bool
     {
         return Comment::where('comment_id', $commentId)->exists();
+    }
+
+    /**
+     * Check if a reply with the given ID already exists in the database.
+     *
+     * @param int $replyId
+     * @return bool
+     */
+    protected function replyExists(int $replyId): bool
+    {
+        return Reply::where('reply_id', $replyId)->exists();
     }
 
     /**
@@ -134,26 +146,34 @@ class FetchStoriesJob implements ShouldQueue
     }
 
     /**
-     * Fetch and store comments for a story.
+     * Fetch and store comments or replies for a story.
      *
      * @param Story $story
      * @param array $commentIds
+     * @param Comment|null $parentComment
      */
-    protected function fetchAndStoreComments(Story $story, array $commentIds): void
+    protected function fetchAndStoreComments(Story $story, array $commentIds, ?Comment $parentComment = null): void
     {
         foreach ($commentIds as $commentId) {
-            // Check if the comment already exists in the database to prevent duplicates
+            // Check if the comment or reply already exists in the database to prevent duplicates
             if (!$this->commentExists($commentId)) {
                 // Fetch individual comment details
                 $commentData = $this->hackernewsService->fetchCommentData($commentId);
-
                 // Validate the fetched comment data (e.g., required fields)
                 if ($this->isValidCommentData($commentData)) {
+                    // Determine whether it's a comment or a reply based on the presence of a parent comment
+                    if ($parentComment) {
+                        // Store the fetched reply data in the 'replies' table
+                        $this->storeReplyData($commentData, $parentComment);
+                    }
+
                     // Store the fetched comment data in the 'comments' table
                     $comment = $this->storeCommentData($commentData, $story);
 
-                    // Associate the comment with the story
-                    $story->comments()->save($comment);
+                    // If this comment or reply has "kids," recursively fetch and store them as comments or replies
+                    if (isset($commentData['kids']) && is_array($commentData['kids'])) {
+                        $this->fetchAndStoreComments($story, $commentData['kids'], $comment);
+                    }
                 }
             }
         }
@@ -188,5 +208,34 @@ class FetchStoriesJob implements ShouldQueue
         ]);
 
         return $comment;
+    }
+
+    /**
+     * Store the fetched reply data in the 'replies' table.
+     *
+     * @param array $replyData
+     * @param Comment $parentComment
+     * @return Reply
+     */
+    protected function storeReplyData(array $replyData, Comment $parentComment): Reply
+    {
+        // Check if the author already exists in the 'authors' table
+        $author = Author::firstOrNew(['username' => $replyData['by']]);
+
+        if (!$author->exists) {
+            // If the author is new, save the author record
+            $author->save();
+        }
+
+        $reply = Reply::create([
+            'reply_id' => $replyData['id'],
+            'text' => $replyData['text'],
+            'type' => $replyData['type'],
+            'time' => \DateTime::createFromFormat('U', $replyData['time']),
+            'author_id' => $author->id,
+            'parent_comment_id' => $parentComment->id, // Associate the reply with its parent comment
+        ]);
+
+        return $reply;
     }
 }

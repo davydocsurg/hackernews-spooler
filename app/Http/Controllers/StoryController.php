@@ -29,7 +29,7 @@ class StoryController extends Controller
             Log::error('Error dispatching FetchStoriesJob: ' . $e->getMessage());
 
             return response()->json([
-                'error' => 'An error occurred while dispatching the job.',
+                'error' => 'An error occurred while dispatching the job. Check the logs for more details.',
             ], 500); // Return a 500 Internal Server Error status code
         }
     }

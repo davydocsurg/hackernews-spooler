@@ -17,11 +17,12 @@ class Reply extends Model
     protected $fillable = [
         'reply_id',
         'text',
+        'type',
         'score',
         'time',
         'author_id',
         'comment_id',
-        'parent_reply_id'
+        'parent_comment_id'
     ];
 
     public function author()
