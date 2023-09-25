@@ -13,6 +13,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class FetchStoriesJob implements ShouldQueue
@@ -38,22 +39,24 @@ class FetchStoriesJob implements ShouldQueue
         // Fetch story IDs from the Hackernews API
         $storyIds = $this->hackernewsService->fetchStoryIds();
 
-        foreach ($storyIds as $storyId) {
-            // Check if the story already exists in the database to prevent duplicates
-            if (!$this->storyExistsInDatabase($storyId)) {
-                // Fetch individual story details
-                $storyData = $this->hackernewsService->fetchStoryData($storyId);
+        DB::transaction(function () use ($storyIds) {
+            foreach ($storyIds as $storyId) {
+                // Check if the story already exists in the database to prevent duplicates
+                if (!$this->storyExistsInDatabase($storyId)) {
+                    // Fetch individual story details
+                    $storyData = $this->hackernewsService->fetchStoryData($storyId);
 
-                // Validate the fetched story data before storing it in the database
-                if ($this->isValidStoryData($storyData)) {
-                    // Store the fetched story data in the 'stories' table
-                    $story = $this->storeStory($storyData);
+                    // Validate the fetched story data before storing it in the database
+                    if ($this->isValidStoryData($storyData)) {
+                        // Store the fetched story data in the 'stories' table
+                        $story = $this->storeStory($storyData);
 
-                    // Fetch and store comments for this story
-                    $this->fetchAndStoreComments($story, $storyData['kids']);
+                        // Fetch and store comments for this story
+                        $this->fetchAndStoreComments($story, $storyData['kids']);
+                    }
                 }
             }
-        }
+        });
     }
 
     /**
@@ -212,6 +215,9 @@ class FetchStoriesJob implements ShouldQueue
     protected function storeComment(array $commentData, Story $story): ?Comment
     {
         try {
+            // Begin a database transaction
+            DB::beginTransaction();
+
             // Check if the author already exists in the 'authors' table
             $author = $this->getOrCreateAuthor($commentData['by']);
 
@@ -226,8 +232,12 @@ class FetchStoriesJob implements ShouldQueue
                 'story_id' => $story->id, // Associate the comment with the story
             ]);
 
+            // Commit the transaction
+            DB::commit();
+
             return $comment;
         } catch (\Throwable $th) {
+            DB::rollBack();
             Log::error('Error storing comment data: ' . $th);
             return failedResponse($th, false, 'Error storing comment data');
         }
@@ -243,6 +253,9 @@ class FetchStoriesJob implements ShouldQueue
     protected function storeReply(array $replyData, Comment $parentComment): ?Reply
     {
         try {
+            // Begin a database transaction
+            DB::beginTransaction();
+
             // Check if the author already exists in the 'authors' table
             $author = $this->getOrCreateAuthor($replyData['by']);
 
@@ -254,6 +267,9 @@ class FetchStoriesJob implements ShouldQueue
                 'author_id' => $author->id,
                 'parent_comment_id' => $parentComment->id, // Associate the reply with its parent comment
             ]);
+
+            // Commit the transaction
+            DB::commit();
 
             return $reply;
         } catch (\Throwable $th) {
