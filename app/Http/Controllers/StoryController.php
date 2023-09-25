@@ -22,7 +22,7 @@ class StoryController extends Controller
         try {
             $validated = $this->validateRequest($request);
             if ($validated->fails()) {
-                return failedResponse($validated->errors(), false); // Return a 400 Bad Request status code
+                return otherError(400, false, $validated->errors()); // Return a 400 Bad Request status code
             }
 
             FetchStoriesJob::dispatch($hackernewsService, $request->limit);
@@ -45,7 +45,7 @@ class StoryController extends Controller
     public function validateRequest(Request $request): object
     {
         return Validator::make($request->all(), [
-            'limit' => 'required|integer|min:1|max:100'
+            'limit' => 'integer|min:1|max:100'
         ]);
     }
 }
