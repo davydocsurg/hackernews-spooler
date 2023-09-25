@@ -70,7 +70,7 @@ class StoryFetcher implements ShouldQueue
             $authorId = $this->authorService->getAuthorId($storyData['by']);
 
             // Create the story record and associate it with the author
-            $story =    Story::create([
+            $story = Story::create([
                 'story_id' => $storyData['id'],
                 'title' => $storyData['title'],
                 'url' => $storyData['url'],
@@ -96,6 +96,9 @@ class StoryFetcher implements ShouldQueue
     {
         // Fetch story IDs from the Hackernews API
         $storyIds = $this->hackernewsService->fetchStoryIds();
+
+        // Limit the number of stories to 10
+        $storyIds = array_slice($storyIds, 0, 10);
 
         foreach ($storyIds as $storyId) {
             // Check if the story already exists in the database to prevent duplicates

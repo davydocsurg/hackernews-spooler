@@ -19,6 +19,7 @@ class StoryController extends Controller
     {
         try {
             FetchStoriesJob::dispatch($hackernewsService);
+
             return successResponse('Fetching stories job dispatched successfully.', true); // Return a 200 OK status code
         } catch (\Throwable $e) {
             // Handle any exceptions or errors here
