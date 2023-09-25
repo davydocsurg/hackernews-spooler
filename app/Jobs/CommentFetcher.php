@@ -72,7 +72,8 @@ class CommentFetcher implements ShouldQueue
      *
      * @param array $commentData
      * @param Story $story The parent story if it's a top-level comment, or the parent comment if it's a reply
-     * @return Comment|Exception
+     * @return Comment
+     * @throws \Throwable
      */
     protected function storeComment(array $commentData, Story $story): ?Comment
     {
