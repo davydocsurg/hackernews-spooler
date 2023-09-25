@@ -38,7 +38,7 @@ class FetchStoriesCommand extends Command
         $this->output->newLine();
 
         // Dispatch the FetchStories job
-        FetchStoriesJob::dispatch($hackernewsService, $storyLimit);
+        dispatch(new FetchStoriesJob($hackernewsService, $storyLimit));
 
         // Display a completion message
         $this->info("Fetched and processed {$storyLimit} " . ($storyLimit > 1 ? 'stories' : 'story') . ' successfully.');

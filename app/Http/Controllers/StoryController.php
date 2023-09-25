@@ -25,7 +25,8 @@ class StoryController extends Controller
                 return otherError(400, false, $validated->errors()); // Return a 400 Bad Request status code
             }
 
-            FetchStoriesJob::dispatch($hackernewsService, $request->limit);
+            // FetchStoriesJob::dispatch($hackernewsService, $request->limit);
+            dispatch(new FetchStoriesJob($hackernewsService, $request->limit));
 
             return successResponse('Fetching stories job dispatched successfully.', true); // Return a 200 OK status code
         } catch (\Throwable $e) {
