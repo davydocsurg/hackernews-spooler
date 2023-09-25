@@ -13,7 +13,7 @@ class FetchStoriesCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'spool:fetch-stories';
+    protected $signature = 'spool:fetch-stories { --limit=100: The number of stories to fetch }';
 
     /**
      * The console command description.
@@ -27,7 +27,20 @@ class FetchStoriesCommand extends Command
      */
     public function handle()
     {
+        // Fetch the story limit from the command line
+        $storyLimit = $this->option('limit');
+
+        // Get the HackernewsService instance
         $hackernewsService = new HackernewsService();
-        FetchStoriesJob::dispatch($hackernewsService);
+
+        // Display a message indicating that fetching and processing is in progress
+        $this->output->write("<fg=white>Fetching and processing {$storyLimit} " . ($storyLimit > 1 ? 'stories' : 'story') . '...</>');
+        $this->output->newLine();
+
+        // Dispatch the FetchStories job
+        FetchStoriesJob::dispatch($hackernewsService, $storyLimit);
+
+        // Display a completion message
+        $this->info("Fetched and processed {$storyLimit} " . ($storyLimit > 1 ? 'stories' : 'story') . ' successfully.');
     }
 }

@@ -23,15 +23,19 @@ class StoryFetcher implements ShouldQueue
 
     protected $hackernewsService;
     protected $authorService;
+    protected $storyLimit;
+    protected $defaultStoryLimit = 100;
 
     /**
      * Create a new job instance.
      */
-    public function __construct(HackernewsService $hackernewsService)
+    public function __construct(HackernewsService $hackernewsService, $storyLimit)
     {
         $this->hackernewsService = $hackernewsService;
         $authorService = new AuthorService();
         $this->authorService = $authorService;
+        $this->storyLimit = $storyLimit;
+        $this->defaultStoryLimit = $storyLimit;
     }
 
     /**
@@ -97,8 +101,11 @@ class StoryFetcher implements ShouldQueue
         // Fetch story IDs from the Hackernews API
         $storyIds = $this->hackernewsService->fetchStoryIds();
 
-        // Limit the number of stories to 10
-        $storyIds = array_slice($storyIds, 0, 10);
+        // Limit the number of stories according to the 'storyLimit' property
+        if ($this->storyLimit) {
+            $storyIds = array_slice($storyIds, 0, $this->storyLimit);
+        }
+        $storyIds = array_slice($storyIds, 0, $this->defaultStoryLimit);
 
         foreach ($storyIds as $storyId) {
             // Check if the story already exists in the database to prevent duplicates

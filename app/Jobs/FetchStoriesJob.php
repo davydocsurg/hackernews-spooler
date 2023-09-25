@@ -21,15 +21,17 @@ class FetchStoriesJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
     protected $hackernewsService;
+    protected $storyLimit;
 
     /**
      * Create a new job instance.
      *
      * @param HackernewsService $hackernewsService
      */
-    public function __construct(HackernewsService $hackernewsService)
+    public function __construct(HackernewsService $hackernewsService, int $storyLimit)
     {
         $this->hackernewsService = $hackernewsService;
+        $this->storyLimit = $storyLimit;
     }
 
     /**
@@ -39,7 +41,7 @@ class FetchStoriesJob implements ShouldQueue
     {
         // DB::transaction(function () {
         // Fetch and store stories
-        (new StoryFetcher($this->hackernewsService))->fetchAndStoreStories();
+        (new StoryFetcher($this->hackernewsService, $this->storyLimit))->fetchAndStoreStories();
         // });
     }
 }
