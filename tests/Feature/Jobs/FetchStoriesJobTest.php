@@ -3,13 +3,11 @@
 namespace Tests\Feature\Jobs;
 
 use App\Jobs\FetchStoriesJob;
-use App\Models\Story;
 use App\Services\HackernewsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Queue;
-use Mockery;
 use Tests\TestCase;
 
 class FetchStoriesJobTest extends TestCase
