@@ -174,6 +174,16 @@ php artisan serve
 {{your-host}}/api/fetch-stories
 ```
 
+In addition to this, you can specify the story limit by adding `limit` to your request body, for example:
+
+```json
+{
+    "limit": 10
+}
+```
+
+This will set the story limit to 10.
+
 4. Monitor the response to confirm the successful execution of the data spooling process.
 
 ### Testing
