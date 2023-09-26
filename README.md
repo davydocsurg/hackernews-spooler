@@ -1,67 +1,208 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Hackernews Data Spooler
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Description
 
-## About Laravel
+The HackerNews Data Spooler is a Laravel-based project that efficiently retrieves data from the HackerNews API and stores it in a database. This project employs concepts such as jobs, queues, services, and containers to handle data processing effectively.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Key Features
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+-   Data spooling from the HackerNews API.
+-   Separate database tables for each item entity (stories, comments, authors, etc.) following the HackerNews API structure.
+-   Prevention of duplicate items.
+-   Scheduled data spooling every 12 hours.
+-   Spooling of up to 100 stories along with all related items, including authors, comments, and comment-authors.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Table of Contents
 
-## Learning Laravel
+-   [Prerequisites](#prerequisites)
+-   [Installation and Usage](#installation)
+-   [Testing](#testing)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### Prerequisites
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+Before you begin with the HackerNews Data Spooler project, ensure that you have the following prerequisites in place:
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+-   PHP: Ensure that you have PHP installed on your system, preferably PHP 7.4 or later. You can download PHP from [php.net](https://php.net).
 
-## Laravel Sponsors
+-   **Composer**: Laravel uses Composer for dependency management. If you don't have Composer installed, you can download it from [getcomposer.org](https://getcomposer.org).
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+-   **MySQL Database**: Prepare a MySQL database for your project. You'll need to create a new database and update your `.env` file with the credentials.
 
-### Premium Partners
+-   **Queue Configuration**: Ensure that your Laravel project is correctly configured to use a queue driver (e.g., Redis, database). Refer to the [Laravel Queue documentation](https://laravel.com/docs/10.x/queues) for configuration details.
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+-   **Postman (Optional)**: Download or install it [here](https://postman.com)
 
-## Contributing
+### Installation and Usage
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+To install the project and set it up on your local development environment, follow these steps:
 
-## Code of Conduct
+1. **Clone this Repository**: Begin by cloning this repository to your local machine using Git. Open your terminal and run the following command:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+git clone https://github.com/davydocsurg/hackernews-spooler.git
+```
 
-## Security Vulnerabilities
+2. **Navigate to the Project Directory**: Change your working directory to the project folder:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+cd hackernews-spooler
+```
 
-## License
+3. **Install Composer Dependencies**: Laravel uses Composer to manage its dependencies. If you don't have Composer installed, you can download it from [getcomposer.org](https://getcomposer.org). Once Composer is installed, run the following command to install the PHP dependencies:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-# hackernews-spooling
+```bash
+composer install
+```
+
+4. **Set Up Environment Variables**: Create a copy of the `.env.example` file and name it `.env`. You can do this by running:
+
+```bash
+cp .env.example .env
+```
+
+Then, open the `.env` file and configure the database connection settings according to your MySQL setup.
+
+```bash
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=your_database_name
+DB_USERNAME=your_database_username
+DB_PASSWORD=your_database_password
+```
+
+Replace `your_database_name`, `your_database_username`, and `your_database_password` with your MySQL database credentials.
+
+In addition to this, set your `QUEUE_CONNECTION` to `database`:
+
+```bash
+QUEUE_CONNECTION=database
+```
+
+5. **Generate Application Key**: Generate an application key for Laravel by running the following command:
+
+```bash
+php artisan key:generate
+```
+
+6. **Run Database Migrations**: Run the database migrations to create the necessary database tables:
+
+```bash
+php artisan migrate
+```
+
+7. **Start the Development Server**: You can now start the Laravel development server:
+
+```bash
+php artisan serve
+```
+
+The application should now be running locally at http://localhost:8000.
+
+8. **Start the Queue Worker**:
+
+```bash
+php artisan queue:work
+```
+
+This command will process any queued jobs, such as fetching stories, comments, and their replies from the Hackernews API.
+
+9. **Run the Data Spooler**: The data spooler can be run using one of the following options:
+
+-   **Schedule the Data Spooler (Local Development)**: To schedule and run the job that fetches and stores Hackernews data on your local development server, you can use Laravel's built-in scheduler. Follow these steps:
+
+a. Open your terminal or command prompt on your local machine.
+
+b. Change your working directory to the project folder where you've cloned the Hackernews Spoofer repository:
+
+```bash
+cd /path-to-your-project
+```
+
+Replace `/path-to-your-project` with the actual path to your project directory.
+
+c. Edit Your Local Cron Jobs
+
+Laravel's scheduler relies on the cron job system to execute tasks at specified intervals. To schedule the data spooler, you'll need to add a new cron job. To edit your user's cron jobs, run the following command:
+
+```bash
+crontab -e
+```
+
+d. Add the Laravel Scheduler Cron Job
+
+In the text editor that opens, add the following line to schedule the Laravel scheduler to run every 12 hours:
+
+```bash
+0 */12 * * * cd /path-to-your-project && php artisan schedule:run >> /dev/null 2>&1
+```
+
+Replace `/path-to-your-project` with the actual path to your project directory.
+
+This cron job will execute Laravel's scheduler every 12 hours.
+
+e. Save and Exit
+
+Save the file and exit the text editor. Now, the data spooler will be automatically executed by Laravel's scheduler every 12 hours.
+
+-   **Use the Artisan Command (Manually)**: You can manually trigger the data spooler using the following Artisan command:
+
+```bash
+php artisan spool:fetch-stories
+```
+
+The above command will fetch 100 stories alongside their comments and replies. However, if you want to specify the number of stories you want to fetch, you can add the `--limit` flag and specify the number of stories you want to fetch like this:
+
+```bash
+php artisan spool:fetch-stories --limit=10
+```
+
+Now, this command will fetch 10 stories alongside their comments and replies.
+
+-   **Use Postman**
+
+1. Open Postman or [download](https://postman.com) it if you haven't already.
+2. If your development server is not running, run this command in the **project's root directory** to start it:
+
+```bash
+php artisan serve
+```
+
+3. In Postman, Create and make a `GET` request to this endpoint:
+
+```bash
+{{your-host}}/api/fetch-stories
+```
+
+In addition to this, you can specify the story limit by adding `limit` to your request body, for example:
+
+```json
+{
+    "limit": 10
+}
+```
+
+This will set the story limit to 10.
+
+4. Monitor the response to confirm the successful execution of the data spooling process.
+
+### Testing
+
+To run the tests for the HackerNews Data Spooler project, you can use Laravel's built-in testing tools. Here are the steps to run the tests:
+
+1.  Open your terminal
+2.  **Navigate to the Project Directory**: Change your working directory to the project folder where you've cloned the HackerNews Spooler repository if you're not already in that directory:
+
+```bash
+cd /path-to-your-project
+```
+
+Replace `/path-to-your-project` with the actual path to your project directory.
+
+3. **Run the Tests**: Use the following Artisan command to run the tests:
+
+```bash
+php artisan test
+```
+
+After running the tests, you will see the results displayed in your terminal.

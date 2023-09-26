@@ -22,8 +22,7 @@ class Kernel extends ConsoleKernel
         $hackernewsService = new HackernewsService();
 
         // Schedule the FetchStoriesJob to run every 12 hours
-        $schedule->job(new FetchStoriesJob($hackernewsService, $defaultLimit))->everySixHours();
-        $schedule->job(new FetchStoriesJob($hackernewsService, $defaultLimit))->everySixHours()->hourlyAt(12);
+        $schedule->job(new FetchStoriesJob($hackernewsService, $defaultLimit))->cron('0 */12 * * *');
     }
 
     /**

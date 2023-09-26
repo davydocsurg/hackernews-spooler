@@ -25,8 +25,10 @@ class StoryController extends Controller
                 return otherError(400, false, $validated->errors()); // Return a 400 Bad Request status code
             }
 
+            $defaultStoryLimit = config()->get('hackernews.default_story_limit');
+
             // FetchStoriesJob::dispatch($hackernewsService, $request->limit);
-            dispatch(new FetchStoriesJob($hackernewsService, $request->limit));
+            dispatch(new FetchStoriesJob($hackernewsService, $request->limit ?? $defaultStoryLimit));
 
             return successResponse('Fetching stories job dispatched successfully.', true); // Return a 200 OK status code
         } catch (\Throwable $e) {

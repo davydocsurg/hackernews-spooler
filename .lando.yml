@@ -1,0 +1,17 @@
+name: hackernews-data-spooler
+recipe: laravel
+config:
+  webroot: public
+  cache: redis
+  xdebug: true
+  php: "8.1"
+services:
+  database:
+    portforward: 33263
+  phpmyadmin:
+    type: phpmyadmin
+proxy:
+  appserver:
+    - hackernews.data-spooler
+  phpmyadmin:
+    - pma.hackernews-data-spooler
