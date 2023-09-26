@@ -3,10 +3,13 @@
 namespace Tests\Feature\Jobs;
 
 use App\Jobs\FetchStoriesJob;
+use App\Models\Story;
 use App\Services\HackernewsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Queue;
+use Mockery;
 use Tests\TestCase;
 
 class FetchStoriesJobTest extends TestCase
@@ -36,45 +39,35 @@ class FetchStoriesJobTest extends TestCase
         $this->assertArrayHasKey('url', $storyData);
     }
 
+    public function test_fetch_stories_job_dispatched_successfully(): void
+    {
+        // Ensure the queue is empty
+        Queue::fake();
+
+        // Define the expected number of stories to be fetched and processed
+        $storyLimit = 10;
+
+        // Mock the HackernewsService
+        $hackernewsService = $this->mockHackernewsService();
+
+        // Dispatch the FetchStoriesJob
+        FetchStoriesJob::dispatch($hackernewsService, $storyLimit);
+
+        // Assert that the job was pushed to the queue with the correct storyLimit
+        Queue::assertPushed(FetchStoriesJob::class, function ($job) use ($storyLimit, $hackernewsService) {
+            return $job->storyLimit === $storyLimit && $job->hackernewsService === $hackernewsService;
+        });
+    }
+
     /**
-     * Test that the FetchStoriesJob is dispatched and processed correctly.
+     * Mock the HackernewsService
      *
-     * @return void
+     * @return HackernewsService
      */
-    // public function test_fetch_stories_job_dispatched_and_processed_correctly(): void
-    // {
-    //     // Mock the HackernewsService to prevent actual API calls during testing
-    //     $hackernewsService = $this->mock(HackernewsService::class);
+    private function mockHackernewsService()
+    {
+        $mockedHackernewsService = $this->mock(HackernewsService::class);
 
-    //     // Define the expected number of stories to be fetched and processed
-    //     $storyLimit = 10;
-
-    //     // Mock the expected behavior of the HackernewsService
-    //     $hackernewsService->shouldReceive('fetchStoryIds')->andReturn([1, 2, 3]); // Example story IDs
-
-    //     // Dispatch the FetchStoriesJob
-    //     FetchStoriesJob::dispatch($hackernewsService, $storyLimit);
-
-    //     // Assert that the job was pushed to the queue
-    //     Queue::assertPushed(FetchStoriesJob::class);
-
-    //     // Optionally, you can assert that specific methods are called within the job's handle method
-    //     $hackernewsService->shouldReceive('fetchStoryData')->times($storyLimit)->andReturn([
-    //         'by' => 'test',
-    //         'descendants' => 1,
-    //         'id' => 1,
-    //         'kids' => [1, 2, 3],
-    //         'score' => 1,
-    //         'time' => 1,
-    //         'title' => 'test',
-    //         'type' => 'test',
-    //         'url' => 'test'
-    //     ]);
-
-    //     // Run the job
-    //     Queue::assertPushed(FetchStoriesJob::class, function ($job) use ($storyLimit) {
-    //         $job->handle();
-    //         return true;
-    //     });
-    // }
+        return $mockedHackernewsService;
+    }
 }

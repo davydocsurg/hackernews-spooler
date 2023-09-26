@@ -13,8 +13,8 @@ use Illuminate\Queue\SerializesModels;
 class FetchStoriesJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-    protected $hackernewsService;
-    protected $storyLimit;
+    public $hackernewsService;
+    public $storyLimit;
 
     /**
      * Create a new job instance.
@@ -32,9 +32,7 @@ class FetchStoriesJob implements ShouldQueue
      */
     public function handle(): void
     {
-        // DB::transaction(function () {
         // Fetch and store stories
         (new StoryFetcher($this->hackernewsService, $this->storyLimit))->fetchAndStoreStories();
-        // });
     }
 }
