@@ -17,10 +17,10 @@ class StoryFetcher implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    protected $hackernewsService;
-    protected $authorService;
-    protected $storyLimit;
-    protected $defaultStoryLimit;
+    public $hackernewsService;
+    public $authorService;
+    public $storyLimit;
+    public $defaultStoryLimit;
 
     /**
      * Create a new job instance.
