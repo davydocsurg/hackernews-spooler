@@ -8,14 +8,10 @@ config:
 services:
   database:
     portforward: 33263
-  mailhog:
-    type: mailhog
-    hogFrom:
-      - appserver
   phpmyadmin:
     type: phpmyadmin
 proxy:
   appserver:
-    - hackernews-data-spooler
+    - hackernews.data-spooler
   phpmyadmin:
     - pma.hackernews-data-spooler
